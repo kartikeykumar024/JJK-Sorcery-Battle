@@ -1,0 +1,14 @@
+# --- Personal Git Guides ---
+git_commands.txt
+git_commits.txt
+
+# --- Python System Files ---
+__pycache__/
+*.py[cod]
+
+# Ignore the actual data
+Usercredentials.json
+playerstats.json
+
+# Ignore all backup files
+*backup*.json
