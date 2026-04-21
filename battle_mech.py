@@ -40,7 +40,7 @@ class Gojo(Character):
             {"name": "Max Red","dmg": 30,"CE": 45},
             {"name": "Max Purple","dmg": 40,"CE":60},
 
-            {"name": "Domain Expansion","dmg": 0,"CE": 100,"effects":{"stun":{"turns": 2,"chance": 100},
+            {"name": "domain expansion","dmg": 0,"CE": 100,"effects":{"stun":{"turns": 2,"chance": 100},
             "dmg debuff": {"multiplier": 0.7, "turns": 2},"dmg buff": {"multiplier": 1.3, "turns": 1,"chance": 100}}}
         ]
 
@@ -58,7 +58,7 @@ class Sukana(Character):
             {"name": "Rush","dmg": 30,"CE": 45},
             {"name": "Max Dismantle","dmg": 30,"CE": 45,},
             {"name": "Fuga","dmg": 40,"CE":60},
-            {"name": "Domain Expansion","dmg": 0,"CE": 100,"effects":{"passive dmg":{"dmg": 30, "turns": 3}}}
+            {"name": "domain expansion","dmg": 0,"CE": 100,"effects":{"passive dmg":{"dmg": 30, "turns": 3}}}
         ]       
 
         super().__init__("Sukana", 480, 400, 80 , 75, moves, awakened_moves)
@@ -100,7 +100,7 @@ class Megumi(Character):
             {"name": "Mahoraga","dmg": 0,"CE":100,"Turns":2,"effects":
             {"stun":{"self stun":{"turns":2},"opp stun":{"turns":1}},"pending dmg":{"dmg":70,"turns":2}}},
 
-            {"name": "Domain Expansion","dmg": 0,"CE": 100,"effects":
+            {"name": "domain expansion","dmg": 0,"CE": 100,"effects":
             {"dmg buff":{"multiplier":1.25,"turns":3,"chance":100},"CE reduc":{"multiplier":0.8,"turns":3}}}
         ] 
 
@@ -121,7 +121,7 @@ class Mahito(Character):
             {"name": "Idle Transfiguration","dmg": 30,"CE": 45,},
             {"name": "Polymorphic Soul Isomer","dmg": 30,"CE": 40,},
             {"name": "Instant Spirit Body","dmg": 40,"CE":60,"effects":{"hp buff": +30, "defense buff": +30}},
-            {"name": "Domain Expansion","dmg": 0,"CE": 100,"effects":{"defense opp debuff":{"multiplier":0.4,"turns":3}}}
+            {"name": "domain expansion","dmg": 0,"CE": 100,"effects":{"defense opp debuff":{"multiplier":0.4,"turns":3}}}
         ] 
 
 
@@ -349,18 +349,18 @@ class BattleManager():
 
     def domain_clash(self):
                 
-        if self.current_turn == self.player and self.move["name"] == "Domain expansion":
+        if self.current_turn == self.player and self.move["name"] == "domain expansion":
 
             self.attacker_effects["active domain turns"] = 3
             self.player_domain_effects = self.move["effects"]
 
-        elif self.current_turn == self.ai and self.move["name"] == "Domain expansion":
+        elif self.current_turn == self.ai and self.move["name"] == "domain expansion":
 
             self.attacker_effects["active domain turns"] = 3
             self.ai_domain_effects = self.move["effects"]
 
 
-        if self.attacker_effects["active domain turns"] and self.move["name"] == "Domain expansion":
+        if self.attacker_effects["active domain turns"] and self.move["name"] == "domain expansion":
             loser = self.ai if self.player.ce > self.ai.ce else self.player
 
 
@@ -474,16 +474,11 @@ class BattleManager():
             self.is_awakened = False
 
         if self.player_turn_counter >= 6 and not self.player.has_awakened:
-
             self.player.can_awaken = True
-            return True
-        
+
         elif self.ai_turn_counter >= 6 and not self.ai.has_awakened:
-
             self.ai.can_awaken = True
-            return True
 
-        return False
 
     def ai_turn_select(self):
         available_moves = []
@@ -505,8 +500,9 @@ class BattleManager():
         if not available_moves:
             self.move = "wait"
 
-        elif self.player_effects["active domain turns"] and "domain expansion" in available_moves:
-            self.move = map(lambda m: m["domain expansion"], available_moves)
+
+        elif self.player_effects["active domain turns"] and next((move for move in available_moves if move["name"] == "domain expansion"), None):
+            self.move = next(move for move in available_moves if move["name"] == "domain expansion")
 
         elif max(available_moves, key = lambda m: m["dmg"])["dmg"] >= self.defender.hp:
             self.move = max(available_moves, key = lambda m: m["dmg"])
@@ -523,15 +519,13 @@ class BattleManager():
                 available_moves[max(available_moves, key = lambda m: m["dmg"])]["score"] += 2
 
             if self.ai.ce / self.ai.max_ce >= 0.5:
-                result = self.check_awakening()
 
-                if result:
+                if self.ai.can_awaken:
                     self.awakening += 2
 
             if self.player.has_awakened:
-                result = self.check_awakening()
 
-                if result:
+                if self.ai.can_awaken:
                     self.awakening += 2
 
         
@@ -540,7 +534,7 @@ class BattleManager():
                 if "effects" in moves:
                     for effects in moves["effects"]:
                         
-                            if isinstance(self.player_effects[effects], dict) and self.player_effects[effects]["turns"]:
+                            if isinstance(self.player_effects.get(effects), dict) and self.player_effects[effects]["turns"]:
 
                                 if effects in self.player_effects[effects]:
                                     moves["score"] -= 2
