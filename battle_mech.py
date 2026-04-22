@@ -20,10 +20,10 @@ class Character():
         self.awakened_turns_left = 0
         self.can_awaken = False
 
+        self.turn_counter = 0
 
-
-        self.player_effects = {}
-        self.ai_effects = {}
+        self.domain_effects = {}
+        self.effects = {}
 
 
 class Gojo(Character):
@@ -140,40 +140,23 @@ class BattleManager():
         self.battle_over = False
         self.winner = None
 
-        self.player_effects = {}
-        self.ai_effects = {}
+        self.player.effects = {}
+        self.ai.effects = {}
 
         self.move = None
-        self.player_turn_counter = 0
-        self.ai_turn_counter = 0
         self.current_turn = None
 
-        self.attacker_effects = {"stun": 0,"damage buff": {"multiplier":0,"turns":0},"damage debuff":
-        {"multiplier":0,"turns":0},"defense buff": {"multiplier":0,"turns":0}, "defense debuff":
-        {"multiplier":0,"turns":0}, "CE reduc": {"multiplier":0,"turns":0},"passive damage": 
-        {"damage":0,"turns":0},"defense opp debuff":{"multiplier":0,"turns":0},"pending damage":{"damage":0,"turns":0}
-        ,"hp buff":0, "active domain turns": 0}
-
-        self.defender_effects = {"stun": 0,"damage buff": {"multiplier":0,"turns":0},"damage debuff":
-        {"multiplier":0,"turns":0},"defense buff": {"multiplier":0,"turns":0}, "defense debuff":
-        {"multiplier":0,"turns":0}, "CE reduc": {"multiplier":0,"turns":0},"passive damage": 
-        {"damage":0,"turns":0},"defense opp debuff":{"multiplier":0,"turns":0},"pending damage":{"damage":0,"turns": 0}
-        ,"hp buff":0, "active domain turns": 0}
-
-        self.player_domain_effects = {}
-        self.ai_domain_effects = {}
 
         self.awakening = 0
-        self.awaken
 
 
     def calculate_damage(self):
         damage = self.move["damage"]
 
-        if self.attacker_effects["damage buff"]["turns"]:
+        if self.attacker.effects["damage buff"]["turns"]:
 
             chance = self.move["effects"]["damage buff"]["chance"]
-            choice = choices([True,False], weights=[chance,100-chance])[0]   #---- WHAT DOES THIS [0] MEAN..
+            choice = choices([True,False], weights=[chance,100-chance])[0]
 
             if choice and ["turns"]:
 
@@ -192,12 +175,12 @@ class BattleManager():
         damage = damage*(1 + damage_buff)*(1 - damage_debuff)
 
 
-        if self.attacker_effects["passive damage"]["turns"]:
-            damage += self.attacker_effects["passive damage"]["damage"]
+        if self.attacker.effects["passive damage"]["turns"]:
+            damage += self.attacker.effects["passive damage"]["damage"]
 
 
-        if self.attacker_effects["pending damage"]["turns"]:   
-            damage += self.attacker_effects["pending damage"]["damage"]
+        if self.attacker.effects["pending damage"]["turns"]:   
+            damage += self.attacker.effects["pending damage"]["damage"]
 
         return damage
 
@@ -206,8 +189,8 @@ class BattleManager():
         defense_debuff = 1
         defense_buff = 1
 
-        if self.attacker_effects["defense opp debuff"]["turns"]:
-            defense_debuff *= self.attacker_effects["defense opp debuff"]["multiplier"]
+        if self.attacker.effects["defense opp debuff"]["turns"]:
+            defense_debuff *= self.attacker.effects["defense opp debuff"]["multiplier"]
 
         applied_damage = damage - (defense*defense_debuff*defense_buff / 20)
 
@@ -215,8 +198,8 @@ class BattleManager():
 
 
     def apply_ce_cost(self):
-        if self.attacker_effects["CE reduc"]["turns"]:
-            self.attacker.ce -= self.move["CE"]*self.attacker_effects["CE reduc"]["multiplier"]
+        if self.attacker.effects["CE reduc"]["turns"]:
+            self.attacker.ce -= self.move["CE"]*self.attacker.effects["CE reduc"]["multiplier"]
 
         else:
             self.attacker.ce -= self.move["CE"]
@@ -244,8 +227,8 @@ class BattleManager():
 
     def turn_decrementer(self):
 
-        self.turn_decrementer(self.player_effects)
-        self.turn_decrementer(self.ai_effects)
+        self.turn_decrementer(self.player.effects)
+        self.turn_decrementer(self.ai.effects)
 
 
     def apply_effects(self):
@@ -255,32 +238,32 @@ class BattleManager():
         for effect, values in self.move.get("effects", {}).items():
 
             if effect == "stun":
-                if self.attacker_effects["stun"]["turns"] == 0:
+                if self.attacker.effects["stun"]["turns"] == 0:
 
                     if "self stun" in values:
-                        self.attacker_effects["stun"] += values["self stun"]["turns"]
+                        self.attacker.effects["stun"] += values["self stun"]["turns"]
 
                     if "opp stun" in values:
-                        self.defender_effects["stun"] += values["opp stun"]["turns"]
+                        self.defender.effects["stun"] += values["opp stun"]["turns"]
 
                     if "turns" in values: 
-                        self.defender_effects["stun"] += values["turns"]
+                        self.defender.effects["stun"] += values["turns"]
                 
 
             elif effect == "damage buff":
 
-                if self.attacker_effects["damage buff"]["turns"] == 0:
+                if self.attacker.effects["damage buff"]["turns"] == 0:
 
-                    self.attacker_effects["damage buff"]["turns"] = values["turns"]
-                    self.attacker_effects["damage buff"]["damage"] = values["damage"]
+                    self.attacker.effects["damage buff"]["turns"] = values["turns"]
+                    self.attacker.effects["damage buff"]["damage"] = values["damage"]
 
 
             elif effect == "damage debuff":
                 
-                if self.attacker_effects["damage debuff"]["turns"] == 0:
+                if self.attacker.effects["damage debuff"]["turns"] == 0:
 
-                    self.attacker_effects["damage debuff"]["turns"] = values["turns"]
-                    self.attacker_effects["damage debuff"]["damage"] = values["damage"]
+                    self.attacker.effects["damage debuff"]["turns"] = values["turns"]
+                    self.attacker.effects["damage debuff"]["damage"] = values["damage"]
 
 
             elif effect == "hp buff":
@@ -297,34 +280,34 @@ class BattleManager():
 
             elif effect == "defense opp debuff":
 
-                if self.attacker_effects["defense opp debuff"]["turns"] == 0:
+                if self.attacker.effects["defense opp debuff"]["turns"] == 0:
 
-                    self.attacker_effects["defense opp debuff"]["turns"] = values["turns"]
-                    self.attacker_effects["defense opp debuff"]["damage"] = values["damage"]
+                    self.attacker.effects["defense opp debuff"]["turns"] = values["turns"]
+                    self.attacker.effects["defense opp debuff"]["damage"] = values["damage"]
                 
 
             elif effect == "CE reduc":
 
-                if self.attacker_effects["CE reduc"]["turns"] == 0:
+                if self.attacker.effects["CE reduc"]["turns"] == 0:
 
-                    self.attacker_effects["CE reduc"]["turns"] = values["turns"]
-                    self.attacker_effects["CE reduc"]["damage"] = values["damage"]
+                    self.attacker.effects["CE reduc"]["turns"] = values["turns"]
+                    self.attacker.effects["CE reduc"]["damage"] = values["damage"]
 
             
             elif effect == "passive damage":
 
-                if self.attacker_effects["passive damage"]["turns"] == 0:
+                if self.attacker.effects["passive damage"]["turns"] == 0:
 
-                    self.attacker_effects["passive damage"]["turns"] = values["turns"]
-                    self.attacker_effects["passive damage"]["damage"] = values["damage"] 
+                    self.attacker.effects["passive damage"]["turns"] = values["turns"]
+                    self.attacker.effects["passive damage"]["damage"] = values["damage"] 
 
             
             elif effect == "pending damage":
 
-                if self.attacker_effects["pending damage"]["turns"] == 0:
+                if self.attacker.effects["pending damage"]["turns"] == 0:
 
-                    self.attacker_effects["pending damage"]["turns"] = values["turns"]
-                    self.attacker_effects["pending damage"]["damage"] = values["damage"]
+                    self.attacker.effects["pending damage"]["turns"] = values["turns"]
+                    self.attacker.effects["pending damage"]["damage"] = values["damage"]
 
 
 
@@ -337,52 +320,44 @@ class BattleManager():
         
         return None
 
-
-    def domain_clash(self):
+    def domain_clash(self, character):
                 
         if self.current_turn == self.player and self.move["name"] == "domain expansion":
 
-            self.attacker_effects["active domain turns"] = 3
-            self.player_domain_effects = self.move["effects"]
+            character.effects["active domain turns"] = 3
+            character.domain_effects = self.move["effects"]
 
-        elif self.current_turn == self.ai and self.move["name"] == "domain expansion":
-
-            self.attacker_effects["active domain turns"] = 3
-            self.ai_domain_effects = self.move["effects"]
-
-
-        if self.attacker_effects["active domain turns"] and self.move["name"] == "domain expansion":
+        if self.attacker.effects["active domain turns"] and self.move["name"] == "domain expansion":
             loser = self.ai if self.player.ce > self.ai.ce else self.player
+
+        return loser
+
+    def domain_loser(self, character):
+
+        for effect in self.character.domain_effects:
+
+                if effect in character.effects:
+
+                    character.effects[effect]["turns"] = 0
+                            
+                    if "multiplier" in character.effects[effect]:
+                        character.effects[effect]["multiplier"] = 0 
+                        
+                    if "passive damage" in character.effects[effect]:
+                        character.effects[effect]["damage"] = 0
+
+
+    def domain_clasher(self):
+                
+        loser = self.domain_clash(self.player)
+        loser = self.domain_clash(self.ai)
 
 
         if loser == self.player:
-            for effect in self.player_domain_effects:
-
-                if effect in self.player_effects:
-
-                    self.player_effects[effect]["turns"] = 0
-                            
-                    if "multiplier" in self.player_effects[effect]:
-                        self.player_effects[effect]["multiplier"] = 0 
-                        
-                    if "passive damage" in self.player_effects[effect]:
-                        self.player_effects[effect]["damage"] = 0
-
-
+            self.domain_loser(self.player)
 
         elif loser == self.ai:
-            for effect in self.ai_domain_effects:
-
-                if effect in self.ai_effects:
-
-                    self.ai_effects[effect]["turns"] = 0
-
-                    if "multiplier" in self.player_effects[effect]:
-                        self.ai_effects[effect]["multiplier"] = 0 
-                        
-                    if "passive damage" in self.player_effects[effect]:
-                        self.ai_effects[effect]["damage"] = 0
-
+            self.domain_loser(self.ai)
 
 
     def turn_executer(self):
@@ -405,70 +380,57 @@ class BattleManager():
                 self.winner = self.player if result == "player" else self.ai
         
 
+    def turn_decider(self, player1, player2):
+            
+            if not self.player.effects["stun"]:
+
+                self.player.turn_counter += 1
+
+                self.attacker = player1
+                self.defender = player2
+
+                self.turn_executer()
+
+                self.player.effects.update(self.attacker.effects)
+                self.ai.effects.update(self.defender.effects) 
+
+
+            else:
+                self.turn_decrementer()
+
+
+
     def turn_flow(self):
 
-        if self.player_turn_counter == self.ai_turn_counter and self.player.speed > self.ai.speed:
+        if self.player.turn_counter == self.ai.turn_counter and self.player.speed > self.ai.speed:
             self.current_turn = self.player
         
-        elif self.ai_turn_counter > self.player_turn_counter:
+        elif self.ai.turn_counter > self.player.turn_counter:
             self.current_turn = self.player
 
         else:
             self.current_turn = self.ai
 
         if self.current_turn == self.player:
-
-            self.attacker_effects.update(self.player_effects)
-            self.defender_effects.update(self.ai_effects)
-
-            if not self.player_effects["stun"]:
-
-                self.player_turn_counter += 1
-
-                self.attacker = self.player
-                self.defender = self.ai
-
-                self.turn_executer()
-
-                self.player_effects.update(self.attacker_effects)
-                self.ai_effects.update(self.defender_effects) 
-
-            else:
-                self.turn_decrementer()
-           
+            self.turn_decider(self.player, self.ai) 
 
         elif self.current_turn == self.ai:
+            self.turn_decider(self.ai, self.player)
 
-            self.attacker_effects.update(self.ai_effects)
-            self.defender_effects.update(self.player_effects)
-
-            if not self.ai_effects["stun"]:
-
-                self.ai_turn_counter += 1
-
-                self.attacker = self.ai
-                self.defender = self.player
-
+            if not self.player.effects["turns"]:
                 self.ai_turn_select()
-                
-                self.turn_executer()
 
-                self.ai_effects.update(self.attacker_effects)
-                self.player_effects.update(self.defender_effects)
+    def check_awaken(self, character):
+        if character.awakened_turns_left == 0:
+            character.is_awakened = False
 
-            else:
-                self.turn_decrementer()
+        if character.turn_counter >= 6 and not character.has_awakened:
+            character.can_awaken = True
 
 
     def check_awakening(self):
-        if self.awakened_turns_left == 0:
-            self.is_awakened = False
-
-        if self.player_turn_counter >= 6 and not self.player.has_awakened:
-            self.player.can_awaken = True
-
-        elif self.ai_turn_counter >= 6 and not self.ai.has_awakened:
-            self.ai.can_awaken = True
+        self.check_awaken(self.player)
+        self.check_awaken(self.ai)
 
 
     def ai_turn_select(self):
@@ -492,7 +454,7 @@ class BattleManager():
             self.move = "wait"
 
 
-        elif self.player_effects["active domain turns"] and next((move for move in available_moves if move["name"] == "domain expansion"), None):
+        elif self.player.effects["active domain turns"] and next((move for move in available_moves if move["name"] == "domain expansion"), None):
             self.move = next(move for move in available_moves if move["name"] == "domain expansion")
 
         elif max(available_moves, key = lambda m: m["damage"])["damage"] >= self.defender.hp:
@@ -525,9 +487,9 @@ class BattleManager():
                 if "effects" in moves:
                     for effects in moves["effects"]:
                         
-                            if isinstance(self.player_effects.get(effects), dict) and self.player_effects[effects]["turns"]:
+                            if isinstance(self.player.effects.get(effects), dict) and self.player.effects[effects]["turns"]:
 
-                                if effects in self.player_effects[effects]:
+                                if effects in self.player.effects[effects]:
                                     moves["score"] -= 2
             
 
