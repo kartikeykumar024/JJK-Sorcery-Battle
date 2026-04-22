@@ -2,7 +2,10 @@ import pygame
 import bcrypt
 from user_data_manager import FileManager,AuthManager,FileMissingError,FileCorruptedError,Stats
 
+
 file_manager = FileManager()
+
+
 try:
     stats = file_manager.load_player_stats()
 except (FileMissingError,FileCorruptedError):
@@ -117,13 +120,17 @@ forgot_new_password_textbox = pygame.Rect(440, 460, 400, 50)
 
 
 def update_textbox(text,event,font):
+
     if event.key == pygame.K_BACKSPACE:
         text = text[:-1]
+
     elif len(text) < 18:
         text += event.unicode
+
     else:
         surf = font.render(text,True,(201,184,240))
         return text,surf,False
+
 
     surf = font.render(text,True,(201,184,240))
     return text,surf,True
@@ -169,29 +176,35 @@ def draw_form(show_password, show_passkey=True, show_new_password=False, show_fo
     pygame.draw.rect(screen,(19,16,31),username_textbox,border_radius=15)
     screen.blit(username_surf, username_rect)
 
+
     if show_password:
         screen.blit(password_label_surf, password_label_rect)
         pygame.draw.rect(screen,(19,16,31),password_textbox,border_radius=15)
         screen.blit(password_surf, password_rect)
+
 
     if show_passkey:
         if state == "FORGOT MENU":
             screen.blit(passkey_label_surf, forgot_passkey_label_rect)
             pygame.draw.rect(screen,(19,16,31),forgot_passkey_textbox,border_radius=15)
             screen.blit(passkey_surf, passkey_surf.get_rect(center=forgot_passkey_textbox.center))
+
         else:
             screen.blit(passkey_label_surf, passkey_label_rect)
             pygame.draw.rect(screen,(19,16,31),passkey_textbox,border_radius=15)
             screen.blit(passkey_surf, passkey_rect)
         
+
     if show_new_password:
         screen.blit(new_password_label_surf, new_password_label_rect)
         pygame.draw.rect(screen,(19,16,31),forgot_new_password_textbox,border_radius=15)
         screen.blit(new_password_surf, new_password_surf.get_rect(center=forgot_new_password_textbox.center))
+
         
     if show_forgot:
         screen.blit(forgot_surf, forgot_rect)
         
+
     pygame.draw.rect(screen,(90,31,209),submit_button,border_radius=15)
     screen.blit(submit_surf, submit_rect)
     screen.blit(back_surf, back_rect)
@@ -200,6 +213,7 @@ def draw_form(show_password, show_passkey=True, show_new_password=False, show_fo
 
 while True:
     for event in pygame.event.get():
+
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
@@ -209,8 +223,10 @@ while True:
 
                 if sign_button.collidepoint(pygame.mouse.get_pos()):
                     state = "SIGNUP MENU"
+
                 elif login_button.collidepoint(pygame.mouse.get_pos()):
                     state = "LOGIN MENU"
+
 
         elif state != "GAME MENU":
             if event.type == pygame.MOUSEBUTTONDOWN:
