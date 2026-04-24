@@ -68,10 +68,10 @@ class AuthManager():
             return True
         
     def pass_verifier(self,value):
-        if not value:
-            return False
-        else:
+        if value:
             return True
+        else:
+            return False
 
     def add_and_change_credentials(self,username,hashed_password,hashed_passkey):
         self.credentials[username] = {

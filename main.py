@@ -224,6 +224,11 @@ settings_img = pygame.transform.smoothscale(settings_img, (80, 80))
 settings_rect = settings_img.get_rect(center=(1170, 620))
 
 
+# CHARACTER MENU
+
+
+
+
 def draw_game_menu():
     screen.fill((0,0,0))
     screen.blit(backround_img, (0,0))
