@@ -115,7 +115,6 @@ forgot_rect = forgot_surf.get_rect(center=forgot_button.center)
 
 forgot_passkey_textbox = pygame.Rect(440, 360, 400, 50)
 forgot_passkey_label_rect = passkey_label_surf.get_rect(center=(640, 345))
-
 forgot_new_password_textbox = pygame.Rect(440, 460, 400, 50)
 
 
@@ -211,6 +210,28 @@ def draw_form(show_password, show_passkey=True, show_new_password=False, show_fo
     screen.blit(error_surf, error_rect)
 
 
+
+# GAME MENU
+
+backround_img = pygame.image.load("assets/main_menu_bg.png").convert_alpha()
+
+play_button_img = pygame.image.load("assets/play_button.png").convert_alpha()
+play_button_img = pygame.transform.smoothscale(play_button_img, (160, 160))
+play_button_rect = play_button_img.get_rect(center =(640, 420))
+
+settings_img = pygame.image.load("assets/settings.png").convert_alpha()
+settings_img = pygame.transform.smoothscale(settings_img, (80, 80))
+settings_rect = settings_img.get_rect(center=(1170, 620))
+
+
+def draw_game_menu():
+    screen.fill((0,0,0))
+    screen.blit(backround_img, (0,0))
+
+    screen.blit(play_button_img, play_button_rect)
+    screen.blit(settings_img, settings_rect)
+
+
 while True:
     for event in pygame.event.get():
 
@@ -228,7 +249,8 @@ while True:
                     state = "LOGIN MENU"
 
 
-        elif state != "GAME MENU":
+
+        elif state == "SIGNUP MENU" or state == "LOGIN MENU":
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
 
@@ -308,7 +330,20 @@ while True:
 
                 elif active_box == "new password":
                     new_password,new_password_surf,new_password_rect = handle_textbox_input(
-                        new_password,event,button_font,forgot_new_password_textbox )
+                        new_password,event,button_font,forgot_new_password_textbox)
+
+
+
+        elif state == "GAME MENU":
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                    
+                if play_button_rect.collidepoint(event.pos):
+                    state = "CHARACTER MENU"
+
+                elif settings_rect.collidepoint(event.pos):
+                    state = "SETTINGS MENU"
+
+
 
 
     if state == "MAIN MENU":
@@ -323,5 +358,16 @@ while True:
     elif state == "FORGOT MENU":
         draw_form(show_password= False,show_passkey= True, show_new_password= True, show_forgot = False)
 
+
+    if state == "GAME MENU":
+        draw_game_menu()
+
+    elif state == "CHARACTER MENU":
+        pass
+
+    elif state == "SETTINGS MENU":
+        pass
+
+    print(state)
     pygame.display.update()
     clock.tick(60)
