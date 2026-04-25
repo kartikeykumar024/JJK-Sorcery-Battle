@@ -1,5 +1,6 @@
 import pygame
 import bcrypt
+import random
 
 from user_data_manager import FileManager,AuthManager,FileMissingError,FileCorruptedError,Stats
 from battle_mech import Character, Gojo, Sukana, Yuji, Megumi, Mahito, BattleManager
@@ -239,20 +240,71 @@ def draw_game_menu():
     screen.blit(play_button_img, play_button_rect)
     screen.blit(settings_img, settings_rect)
 
-state = "CHARACTER MENU"
-# CHARACTER MENU
 
-character_img = pygame.image.load("assets/Gojo_character_select.png").convert_alpha()
-character_img = pygame.transform.smoothscale(character_img, (400,400))
-character_rect = character_img.get_rect(center = (400,400))
 
-'''next_img = pygame.image.load("assets/next.png").convert_alpha()
-next_img = pygame.transform.smoothscale(next_img, (0,0))
-next_rect = next_img.get_rect(center = (0,0))
-'''
+state = "CHARACTER MENU"   #remove this line mf!!!!
+
+character_object = [gojo, sukana, yuji, megumi, mahito]
+character_names = ["GOJO","SUKANA","YUJI","MEGUMI","MAHITO"]
+
+character_no = 0
+current_character = character_object[character_no]
+displayed_character = character_names[character_no]
+
+character_img = pygame.image.load(f"assets/{displayed_character}/character_select.png").convert_alpha()
+character_img = pygame.transform.smoothscale(character_img, (400,500))
+
+character_txt_font = pygame.font.Font(None,70)
+select_txt_font = pygame.font.Font(None,38)
+arrow_font = pygame.font.Font(None,150)
+
+right_arrow_surf = arrow_font.render(">", True, (255,255,255))
+right_arrow_rect = right_arrow_surf.get_rect(center=(1200,360))
+
+left_arrow_surf = arrow_font.render("<", True, (255,255,255))
+left_arrow_rect = left_arrow_surf.get_rect(center=(80,360))
+
+select_surf = select_txt_font.render("SELECT", True, (0,220,255))
+select_rect = select_surf.get_rect(center=(1190-80,665-25))
+
+
+def show_stats(y, text):
+    stats_surf = character_txt_font.render(text, True, (255,255,255))
+    stats_rect = stats_surf.get_rect(topleft=(625,y))
+    screen.blit(stats_surf,stats_rect)
+
 
 def draw_character_menu():
+    screen.fill((15,20,25))
+
+    character_rect = character_img.get_rect(center = (315,360))
     screen.blit(character_img, character_rect)
+
+    pygame.draw.rect(screen, (100, 70, 160), (115, 110, 400, 500), 2)
+    pygame.draw.rect(screen, (70, 50, 110), (40, 40, 1200, 640), 3)
+
+    character_name_surf = character_txt_font.render(displayed_character, True, (255,255,255))
+    character_name_rect = character_name_surf.get_rect(center=(850,75))
+    screen.blit(character_name_surf,character_name_rect)
+
+    panel = pygame.Surface((550, 500), pygame.SRCALPHA)
+    panel.fill((25, 15, 40, 200))
+    screen.blit(panel, (585, 110))
+
+    show_stats(200, f"Health: {current_character.max_hp}")
+    show_stats(290, f"Cursed Energy: {current_character.max_ce}")
+    show_stats(380, f"Defense: {current_character.defense}")
+    show_stats(460, f"Speed: {current_character.speed}")
+
+    pygame.draw.circle(screen, (100, 70, 160), (520, 150), 12, 2)
+
+    pygame.draw.rect(screen, (0, 80, 100), (1110-80, 640-25, 160, 50), border_radius=15)
+
+    screen.blit(select_surf,select_rect)
+
+    screen.blit(right_arrow_surf, right_arrow_rect)
+    screen.blit(left_arrow_surf, left_arrow_rect)
+    
 
 
 while True:
@@ -291,6 +343,7 @@ while True:
 
                 elif forgot_button.collidepoint(mouse_pos) and state == "LOGIN MENU":
                     state = "FORGOT MENU"
+
 
                 elif state == "SIGNUP MENU" and submit_button.collidepoint(mouse_pos):
                     result1 = auth_manager.username_verifier(username)
@@ -367,6 +420,40 @@ while True:
                     state = "SETTINGS MENU"
 
 
+        elif state == "CHARACTER MENU":
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                if left_arrow_rect.collidepoint(event.pos):
+
+                    if character_no != 0:
+                        character_no -= 1
+
+                        current_character = character_object[character_no]
+                        displayed_character = character_names[character_no]
+
+                        character_img = pygame.image.load(f"assets/{displayed_character}/character_select.png").convert_alpha()
+                        character_img = pygame.transform.smoothscale(character_img, (400,500))
+
+
+                elif right_arrow_rect.collidepoint(event.pos):
+
+                    if character_no != 4:
+                        character_no += 1
+
+                        current_character = character_object[character_no]
+                        displayed_character = character_names[character_no]
+
+                        character_img = pygame.image.load(f"assets/{displayed_character}/character_select.png").convert_alpha()
+                        character_img = pygame.transform.smoothscale(character_img, (400,500))
+
+                
+                elif select_rect.collidepoint(event.pos):
+                    state = "PRE-BATTLE MENU"
+                    
+                    player = current_character
+                    ai = random.choice(character_object)
+
+
 
 
     if state == "MAIN MENU":
@@ -391,6 +478,7 @@ while True:
     elif state == "SETTINGS MENU":
         pass
 
-    print(state)
+
+
     pygame.display.update()
     clock.tick(60)
