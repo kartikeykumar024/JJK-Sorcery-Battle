@@ -1,9 +1,17 @@
 import pygame
 import bcrypt
+
 from user_data_manager import FileManager,AuthManager,FileMissingError,FileCorruptedError,Stats
+from battle_mech import Character, Gojo, Sukana, Yuji, Megumi, Mahito, BattleManager
 
 
 file_manager = FileManager()
+
+gojo = Gojo()
+sukana = Sukana()
+yuji = Yuji()
+megumi = Megumi()
+mahito = Mahito()
 
 
 try:
@@ -224,17 +232,27 @@ settings_img = pygame.transform.smoothscale(settings_img, (80, 80))
 settings_rect = settings_img.get_rect(center=(1170, 620))
 
 
-# CHARACTER MENU
-
-
-
-
 def draw_game_menu():
     screen.fill((0,0,0))
     screen.blit(backround_img, (0,0))
 
     screen.blit(play_button_img, play_button_rect)
     screen.blit(settings_img, settings_rect)
+
+state = "CHARACTER MENU"
+# CHARACTER MENU
+
+character_img = pygame.image.load("assets/Gojo_character_select.png").convert_alpha()
+character_img = pygame.transform.smoothscale(character_img, (400,400))
+character_rect = character_img.get_rect(center = (400,400))
+
+'''next_img = pygame.image.load("assets/next.png").convert_alpha()
+next_img = pygame.transform.smoothscale(next_img, (0,0))
+next_rect = next_img.get_rect(center = (0,0))
+'''
+
+def draw_character_menu():
+    screen.blit(character_img, character_rect)
 
 
 while True:
@@ -368,7 +386,7 @@ while True:
         draw_game_menu()
 
     elif state == "CHARACTER MENU":
-        pass
+        draw_character_menu()
 
     elif state == "SETTINGS MENU":
         pass
