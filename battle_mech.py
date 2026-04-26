@@ -44,7 +44,7 @@ class Gojo(Character):
             "damage debuff": {"multiplier": 0.7, "turns": 2},"damage buff": {"multiplier": 1.3, "turns": 1,"chance": 100}}}
         ]
 
-        super().__init__("Gojo", 540, 300, 85 , 95, moves, awakened_moves)
+        super().__init__("gojo", 540, 300, 85 , 95, moves, awakened_moves)
 
 class Sukana(Character):
     def __init__(self):
@@ -61,7 +61,7 @@ class Sukana(Character):
             {"name": "domain expansion","damage": 0,"CE": 100,"effects":{"passive damage":{"damage": 30, "turns": 3}}}
         ]       
 
-        super().__init__("Sukana", 480, 400, 80 , 75, moves, awakened_moves)
+        super().__init__("sukana", 480, 400, 80 , 75, moves, awakened_moves)
 
 class Yuji(Character):
     def __init__(self):
@@ -81,7 +81,7 @@ class Yuji(Character):
             {"name": "BrotherHood bond","damage": 0,"CE": 100,"effects":{"damage buff":{"multiplier":1.5,"turns":3,"chance":100}}}
         ]
 
-        super().__init__("Yuji", 450, 350 , 90 , 85 ,moves, awakened_moves)
+        super().__init__("yuji", 450, 350 , 90 , 85 ,moves, awakened_moves)
 
 class Megumi(Character):
     def __init__(self):
@@ -105,7 +105,7 @@ class Megumi(Character):
         ] 
 
 
-        super().__init__("Megumi", 510 , 320 , 80 , 65 , moves, awakened_moves) 
+        super().__init__("megumi", 510 , 320 , 80 , 65 , moves, awakened_moves) 
 
 
 class Mahito(Character):
@@ -125,7 +125,7 @@ class Mahito(Character):
         ] 
 
 
-        super().__init__("Mahito", 450 , 300, 90 , 65 , moves, awakened_moves) 
+        super().__init__("mahito", 450 , 300, 90 , 65 , moves, awakened_moves) 
 
 
 class BattleManager():
