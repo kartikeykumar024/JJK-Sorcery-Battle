@@ -53,7 +53,7 @@ signin_rect = signin_surf.get_rect(center = sign_button.center)
 login_button = pygame.Rect(490,440,300,55)
 login_surf = button_font.render("login",True,(201,184,240))
 login_rect = login_surf.get_rect(center = login_button.center)
-
+#main_menu_bg
 
 def draw_main_menu():
     screen.fill((13,11,20))
@@ -220,32 +220,27 @@ def draw_form(show_password, show_passkey=True, show_new_password=False, show_fo
 
 
 
-# GAME MENU
+game_menu_bg_img = pygame.image.load("assets/others/game-menu.png").convert_alpha()
 
-backround_img = pygame.image.load("assets/main_menu_bg.png").convert_alpha()
-
-play_button_img = pygame.image.load("assets/play_button.png").convert_alpha()
+play_button_img = pygame.image.load("assets/others/play_button.png").convert_alpha()
 play_button_img = pygame.transform.smoothscale(play_button_img, (160, 160))
 play_button_rect = play_button_img.get_rect(center =(640, 420))
 
-settings_img = pygame.image.load("assets/settings.png").convert_alpha()
+settings_img = pygame.image.load("assets/others/settings.png").convert_alpha()
 settings_img = pygame.transform.smoothscale(settings_img, (80, 80))
 settings_rect = settings_img.get_rect(center=(1170, 620))
 
 
 def draw_game_menu():
     screen.fill((0,0,0))
-    screen.blit(backround_img, (0,0))
+    screen.blit(game_menu_bg_img, (0,0))
 
     screen.blit(play_button_img, play_button_rect)
     screen.blit(settings_img, settings_rect)
 
 
-
-state = "CHARACTER MENU"   #remove this line mf!!!!
-
 character_object = [gojo, sukana, yuji, megumi, mahito]
-character_names = ["GOJO","SUKANA","YUJI","MEGUMI","MAHITO"]
+character_names = ["gojo","sukana","yuji","megumi","mahito"]
 
 character_no = 0
 current_character = character_object[character_no]
@@ -296,7 +291,6 @@ def draw_character_menu():
     show_stats(380, f"Defense: {current_character.defense}")
     show_stats(460, f"Speed: {current_character.speed}")
 
-    pygame.draw.circle(screen, (100, 70, 160), (520, 150), 12, 2)
 
     pygame.draw.rect(screen, (0, 80, 100), (1110-80, 640-25, 160, 50), border_radius=15)
 
@@ -305,6 +299,49 @@ def draw_character_menu():
     screen.blit(right_arrow_surf, right_arrow_rect)
     screen.blit(left_arrow_surf, left_arrow_rect)
     
+
+start_time = 0
+
+pre_battle_bg_img = pygame.image.load("assets/others/pre-battle.png").convert_alpha()
+pre_battle_bg_img = pygame.transform.smoothscale(pre_battle_bg_img,(1280,720))
+
+select_surf = select_txt_font.render("Next", True, (0,220,255))
+select_rect = select_surf.get_rect(center=(1190-80,665-25))
+
+center_x = 1220
+center_y = 680
+
+font = pygame.font.Font(None, 28)
+next_surf = font.render("NEXT", True, (255, 255, 255))
+next_rect = next_surf.get_rect(center=(center_x, center_y))
+
+
+def draw_pre_battle_menu():
+    print(start_time)
+    if start_time/1000 - start_time <= 8000:
+        state = "BATTLE MENU"
+
+    screen.fill((0,0,0))
+    
+    screen.blit(pre_battle_bg_img,(0,0))
+
+    pygame.draw.circle(screen, (80,10,20), (center_x, center_y), 35)
+
+    screen.blit(next_surf, next_rect)
+
+    ai_img = pygame.image.load(f"assets/{ai_character}/pre_battle.png").convert_alpha()
+    ai_img = pygame.transform.smoothscale(ai_img, (320,300))
+    ai_img = pygame.transform.flip(ai_img, True, False)
+    screen.blit(ai_img, (900,314))
+
+    player_img = pygame.image.load(f"assets/{displayed_character}/pre_battle.png").convert_alpha()
+    player_img = pygame.transform.smoothscale(player_img, (320,300))
+    screen.blit(player_img, (60,99))
+
+
+def draw_battle_menu():
+    screen.fill((0,0,0))
+
 
 
 while True:
@@ -449,10 +486,17 @@ while True:
                 
                 elif select_rect.collidepoint(event.pos):
                     state = "PRE-BATTLE MENU"
+                    start_time = pygame.time.get_ticks()
+
                     
                     player = current_character
                     ai = random.choice(character_object)
+                    ai_character = ai.name
 
+        elif state == "PRE-BATTLE MENU":
+            
+            if next_rect.collidepoint(event.pos):
+                state = "BATTLE MENU"
 
 
 
@@ -477,6 +521,12 @@ while True:
 
     elif state == "SETTINGS MENU":
         pass
+
+    elif state == "PRE-BATTLE MENU":
+        draw_pre_battle_menu()
+
+    elif state == "BATTLE MENU":
+        draw_battle_menu()
 
 
 
