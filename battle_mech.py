@@ -22,6 +22,8 @@ class Character():
 
         self.turn_counter = 0
 
+        self.available_moves = []
+
         self.domain_effects = {}
         self.effects = {}
 
@@ -380,7 +382,7 @@ class BattleManager():
                 self.winner = self.player if result == "player" else self.ai
         
 
-    def turn_decider(self, player1, player2):
+    def turn_setter_and_executer(self, player1, player2):
             
             if not self.player.effects["stun"]:
 
@@ -411,14 +413,16 @@ class BattleManager():
         else:
             self.current_turn = self.ai
 
+
         if self.current_turn == self.player:
-            self.turn_decider(self.player, self.ai) 
+            self.turn_setter_and_executer(self.player, self.ai) 
 
         elif self.current_turn == self.ai:
-            self.turn_decider(self.ai, self.player)
+            self.turn_setter_and_executer(self.ai, self.player)
 
             if not self.player.effects["turns"]:
                 self.ai_turn_select()
+
 
     def check_awaken(self, character):
         if character.awakened_turns_left == 0:
@@ -434,42 +438,30 @@ class BattleManager():
 
 
     def ai_turn_select(self):
-        available_moves = []
 
-        if self.ai.is_awakened:
-
-            for move in self.ai.awakened_moves:
-                if self.ai.ce >= move["CE"]:
-
-                    available_moves.append({**move, "score" : 0}) # Creates a new dict with score : 0, like appends it in the new dict
-        else:
-
-            for move in self.ai.moves:
-                if self.ai.ce >= move["CE"]:
-
-                    available_moves.append({**move, "score" : 0})
+        self.get_available_moves(self.ai)
 
 
-        if not available_moves:
+        if not self.ai.available_moves:
             self.move = "wait"
 
 
-        elif self.player.effects["active domain turns"] and next((move for move in available_moves if move["name"] == "domain expansion"), None):
-            self.move = next(move for move in available_moves if move["name"] == "domain expansion")
+        elif self.player.effects["active domain turns"] and next((move for move in self.ai.available_moves if move["name"] == "domain expansion"), None):
+            self.move = next(move for move in self.ai.available_moves if move["name"] == "domain expansion")
 
-        elif max(available_moves, key = lambda m: m["damage"])["damage"] >= self.defender.hp:
-            self.move = max(available_moves, key = lambda m: m["damage"])
+        elif max(self.ai.available_moves, key = lambda m: m["damage"])["damage"] >= self.defender.hp:
+            self.move = max(self.ai.available_moves, key = lambda m: m["damage"])
 
         else:
 
             if self.ai.hp / self.ai.max_hp <= 0.3:
-                available_moves[max(available_moves, key = lambda m: m["damage"])]["score"] += 3 # so it access the returned move data and access its score and increament 3 to it.
+                self.ai.available_moves[max(self.ai.available_moves, key = lambda m: m["damage"])]["score"] += 3 # so it access the returned move data and access its score and increament 3 to it.
             
             if self.ai.ce / self.ai.max_ce <= 0.3:
-                available_moves[min(available_moves, key = lambda m: m["CE"])]["score"] += 3
+                self.ai.available_moves[min(self.ai.available_moves, key = lambda m: m["CE"])]["score"] += 3
 
             if self.ai.ce / self.ai.max_ce > 0.3 and self.ai.hp / self.ai.max_hp > 0.3:
-                available_moves[max(available_moves, key = lambda m: m["damage"])]["score"] += 2
+                self.ai.available_moves[max(self.ai.available_moves, key = lambda m: m["damage"])]["score"] += 2
 
             if self.ai.ce / self.ai.max_ce >= 0.5:
 
@@ -482,7 +474,7 @@ class BattleManager():
                     self.awakening += 2
 
         
-            for moves in available_moves:
+            for moves in self.ai.available_moves:
 
                 if "effects" in moves:
                     for effects in moves["effects"]:
@@ -493,11 +485,11 @@ class BattleManager():
                                     moves["score"] -= 2
             
 
-            if self.awakening >= sorted(available_moves, key = lambda m: m["score"], reverse = True)[1]:
+            if self.awakening >= sorted(self.ai.available_moves, key = lambda m: m["score"], reverse = True)[1]:
 
                 self.is_awakened = True
                 self.has_awakened = True
                 self.awakened_turns_left = 3
 
 
-            self.move = available_moves[max(available_moves, key = lambda m: m["score"])]
+            self.move = self.ai.available_moves[max(self.ai.available_moves, key = lambda m: m["score"])]
