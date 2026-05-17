@@ -5,7 +5,7 @@ import random
 from user_data_manager import FileManager,AuthManager,FileMissingError,FileCorruptedError,Stats
 from battle_mech import Character, Gojo, Sukana, Yuji, Megumi, Mahito, BattleManager
 
-
+#battle_manager
 file_manager = FileManager()
 
 gojo = Gojo()
@@ -36,7 +36,6 @@ state = "MAIN MENU"
 active_box = None
 
 
-
 title_font = pygame.font.Font(None,90)
 game_title_surf = title_font.render("Jujutsu Game",True,(240,234,255))
 game_title_rect = game_title_surf.get_rect(center = (640,150))
@@ -53,7 +52,7 @@ signin_rect = signin_surf.get_rect(center = sign_button.center)
 login_button = pygame.Rect(490,440,300,55)
 login_surf = button_font.render("login",True,(201,184,240))
 login_rect = login_surf.get_rect(center = login_button.center)
-#main_menu_bg
+
 
 def draw_main_menu():
     screen.fill((13,11,20))
@@ -263,13 +262,15 @@ select_surf = select_txt_font.render("SELECT", True, (0,220,255))
 select_rect = select_surf.get_rect(center=(1190-80,665-25))
 
 
-def show_stats(y, text):
+def show_stats_pre_battle(y, text):
     stats_surf = character_txt_font.render(text, True, (255,255,255))
     stats_rect = stats_surf.get_rect(topleft=(625,y))
     screen.blit(stats_surf,stats_rect)
 
 
 def draw_character_menu():
+    global displayed_character
+
     screen.fill((15,20,25))
 
     character_rect = character_img.get_rect(center = (315,360))
@@ -286,10 +287,10 @@ def draw_character_menu():
     panel.fill((25, 15, 40, 200))
     screen.blit(panel, (585, 110))
 
-    show_stats(200, f"Health: {current_character.max_hp}")
-    show_stats(290, f"Cursed Energy: {current_character.max_ce}")
-    show_stats(380, f"Defense: {current_character.defense}")
-    show_stats(460, f"Speed: {current_character.speed}")
+    show_stats_pre_battle(200, f"Health: {current_character.max_hp}")
+    show_stats_pre_battle(290, f"Cursed Energy: {current_character.max_ce}")
+    show_stats_pre_battle(380, f"Defense: {current_character.defense}")
+    show_stats_pre_battle(460, f"Speed: {current_character.speed}")
 
 
     pygame.draw.rect(screen, (0, 80, 100), (1110-80, 640-25, 160, 50), border_radius=15)
@@ -315,9 +316,13 @@ font = pygame.font.Font(None, 28)
 next_surf = font.render("NEXT", True, (255, 255, 255))
 next_rect = next_surf.get_rect(center=(center_x, center_y))
 
+ai = random.choice(character_object)
+ai_character = ai.name
+
 
 def draw_pre_battle_menu():
-    print(start_time)
+    global displayed_character
+
     if start_time/1000 - start_time <= 8000:
         state = "BATTLE MENU"
 
@@ -339,10 +344,118 @@ def draw_pre_battle_menu():
     screen.blit(player_img, (60,99))
 
 
+battle_menu_img = pygame.image.load("assets/others/battle-menu.png").convert_alpha()
+battle_menu_img = pygame.transform.smoothscale(battle_menu_img, (1280,720))
+
+awakening_img = pygame.image.load("assets/others/awakening.png").convert_alpha()
+awakening_img = pygame.transform.smoothscale(awakening_img, (220,130))
+awakening_rect = awakening_img.get_rect(topleft = (60, 475))
+
+stats_font = pygame.font.Font(None,70)
+
+battle_manager = BattleManager(player = current_character, ai = ai)
+player = current_character
+
+moves_font = pygame.font.Font(None, 33)
+
+hp_img = pygame.image.load("assets/others/hp_bar.png")
+ce_img = pygame.image.load("assets/others/ce_bar.png")
+
+ai_img = pygame.image.load(f"assets/{ai_character}/battle.png").convert_alpha()
+ai_img = pygame.transform.smoothscale(ai_img, (85,85))
+ai_img = pygame.transform.flip(ai_img, True, False)
+ai_img_rect = ai_img.get_rect(center = (1207,69))
+
+player_img = pygame.image.load(f"assets/{displayed_character}/battle.png").convert_alpha()
+player_img = pygame.transform.smoothscale(player_img, (85,85))
+player_img_rect = player_img.get_rect(center = (73,66))
+
+ai_full_img = pygame.image.load(f"assets/{ai_character}/character_select.png").convert_alpha()
+ai_full_img = pygame.transform.smoothscale(ai_full_img, (400, 450))
+ai_full_img = pygame.transform.flip(ai_full_img, True, False)
+ai_full_img_rect = ai_full_img.get_rect(center = (1082,390))
+
+character_img = pygame.transform.smoothscale(character_img, (400, 450))
+
+move2_rect = pygame.Rect(70, 220, 230, 65)
+move1_rect = pygame.Rect(70, 310, 230, 65)
+move3_rect = pygame.Rect(70, 400, 230, 65)
+
+
+def show_stats_battle_menu(y, x, text, text_color):
+    stats_surf = moves_font.render(text, True, text_color)
+    stats_rect = stats_surf.get_rect(topleft=(x,y))
+    screen.blit(stats_surf,stats_rect)
+
+    return stats_rect
+
+
+def show_bars(character, location1, location2):
+
+    width1 = round(character.hp / character.max_hp * 356)
+    width2= round(character.ce / character.max_ce * 213)
+    height = 20
+
+    bar1 = pygame.transform.smoothscale(hp_img, (width1, height))
+    bar2 = pygame.transform.smoothscale(ce_img, (width2, height))
+    bar2_flipped = pygame.transform.flip(bar2, True, False)
+
+    screen.blit(bar1, location1)
+    screen.blit(bar2_flipped, location2)
+
+state = "BATTLE MENU"
+
 def draw_battle_menu():
     screen.fill((0,0,0))
 
+    screen.blit(battle_menu_img, (0,0))
 
+    # Fill colour (dark purple) + border colour (lighter purple)
+    fill_col = (40, 20, 60)
+    border_col = (140, 100, 200)
+
+    pygame.draw.rect(screen, fill_col, move1_rect, border_radius=10)      # filled interior
+    pygame.draw.rect(screen, border_col, move1_rect, 3, border_radius=10) # border outline
+#turn_flow
+    pygame.draw.rect(screen, fill_col, move2_rect, border_radius=10)
+    pygame.draw.rect(screen, border_col, move2_rect, 3, border_radius=10)
+
+    pygame.draw.rect(screen, fill_col, move3_rect, border_radius=10)
+    pygame.draw.rect(screen, border_col, move3_rect, 3, border_radius=10)
+
+    screen.blit(player_img, player_img_rect)
+    screen.blit(ai_img, ai_img_rect)
+
+    show_bars(player, (175, 54), (174, 80))
+    show_bars(ai, (753, 54), (893, 80))
+
+    battle_manager.check_awakening()
+
+    if player.can_awaken:
+        screen.blit(awakening_img, awakening_rect)
+
+    battle_manager.get_available_moves(player)
+    y = 220
+    x = 70
+
+
+    for move in player.available_moves:
+
+        show_stats_battle_menu(y, x, move["name"], (255, 0, 0))
+        show_stats_battle_menu(y+25, x, f"Damage: {move['damage']}", (0,0,0))
+        show_stats_battle_menu(y+45, x, f"Cursed Energy: {move['CE']}", (0,0,0))
+
+        y += 90
+        if y > 400:
+            break
+
+
+    character_img_rect = character_img.get_rect(center = (575,390))
+    screen.blit(character_img, character_img_rect)
+    screen.blit(ai_full_img, ai_full_img_rect)
+
+    
+    #print(pygame.mouse.get_pos())
 
 while True:
     for event in pygame.event.get():
@@ -350,6 +463,9 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+
+        if event.type == pygame.USEREVENT:
+            pygame.mixer.music.pause() 
 
         if state == "MAIN MENU":
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -484,20 +600,49 @@ while True:
                         character_img = pygame.transform.smoothscale(character_img, (400,500))
 
                 
+                
                 elif select_rect.collidepoint(event.pos):
                     state = "PRE-BATTLE MENU"
                     start_time = pygame.time.get_ticks()
 
-                    
                     player = current_character
-                    ai = random.choice(character_object)
-                    ai_character = ai.name
+
+                    player_img = player_img = pygame.image.load(f"assets/{displayed_character}/battle.png").convert_alpha()
+                    player_img = pygame.transform.smoothscale(player_img, (85,85))
+                    player_img_rect = player_img.get_rect(center = (73,66))
+
 
         elif state == "PRE-BATTLE MENU":
-            
-            if next_rect.collidepoint(event.pos):
-                state = "BATTLE MENU"
+            if event.type == pygame.MOUSEBUTTONDOWN:
 
+                if next_rect.collidepoint(pygame.mouse.get_pos()):
+                    state = "BATTLE MENU"
+                    
+
+        elif state == "BATTLE MENU":
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = event.pos
+
+                if move1_rect.collidepoint(mouse_pos) and battle_manager.current_turn == player:
+                    move = battle_manager.player.available_moves[0]
+                    battle_manager.move = move
+                    battle_manager.turn_flow()
+
+                elif move2_rect.collidepoint(mouse_pos) and battle_manager.current_turn == player:
+                    move = battle_manager.player.available_moves[1]
+                    battle_manager.move = move
+                    battle_manager.turn_flow()
+
+                elif move3_rect.collidepoint(mouse_pos) and battle_manager.current_turn == player:
+                    move = battle_manager.player.available_moves[2]
+                    battle_manager.move = move
+                    battle_manager.turn_flow()
+
+                battle_manager.turn_flow()
+                print(player.hp)
+                print(player.ce)
+                print(ai.hp)
+                print(ai.ce)
 
 
     if state == "MAIN MENU":
@@ -514,18 +659,36 @@ while True:
 
 
     if state == "GAME MENU":
+        pygame.mixer.music.load("assets/soundtracks/Concrete_Fracture.mp3")
+        pygame.mixer.music.play(0)                        
+        pygame.mixer.music.set_endevent(pygame.USEREVENT) 
+
         draw_game_menu()
 
     elif state == "CHARACTER MENU":
+        pygame.mixer.music.load("assets/soundtracks/Cursed_Strike.mp3")
+        pygame.mixer.music.play(0)                        
+        pygame.mixer.music.set_endevent(pygame.USEREVENT)
+
         draw_character_menu()
 
     elif state == "SETTINGS MENU":
         pass
 
     elif state == "PRE-BATTLE MENU":
+        pygame.mixer.music.load("assets/soundtracks/Domain_Collapse.mp3")
+        pygame.mixer.music.play(0)                        
+        pygame.mixer.music.set_endevent(pygame.USEREVENT)
+
+
         draw_pre_battle_menu()
 
     elif state == "BATTLE MENU":
+        pygame.mixer.music.load("assets/soundtracks/Metal_Lung.mp3")
+        pygame.mixer.music.play(0)                        
+        pygame.mixer.music.set_endevent(pygame.USEREVENT)
+
+
         draw_battle_menu()
 
 

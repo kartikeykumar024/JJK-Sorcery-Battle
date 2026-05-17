@@ -142,8 +142,30 @@ class BattleManager():
         self.battle_over = False
         self.winner = None
 
-        self.player.effects = {}
-        self.ai.effects = {}
+        self.player.effects = {"stun": 0,
+    "damage buff": {"multiplier": 0, "turns": 0},
+    "damage debuff": {"multiplier": 0, "turns": 0},
+    "defense buff": {"multiplier": 0, "turns": 0},
+    "defense debuff": {"multiplier": 0, "turns": 0},
+    "CE reduc": {"multiplier": 0, "turns": 0},
+    "passive damage": {"damage": 0, "turns": 0},
+    "defense opp debuff": {"multiplier": 0, "turns": 0},
+    "pending damage": {"damage": 0, "turns": 0},
+    "active domain turns": 0
+    }
+        
+
+        self.ai.effects = {"stun": 0,
+    "damage buff": {"multiplier": 0, "turns": 0},
+    "damage debuff": {"multiplier": 0, "turns": 0},
+    "defense buff": {"multiplier": 0, "turns": 0},
+    "defense debuff": {"multiplier": 0, "turns": 0},
+    "CE reduc": {"multiplier": 0, "turns": 0},
+    "passive damage": {"damage": 0, "turns": 0},
+    "defense opp debuff": {"multiplier": 0, "turns": 0},
+    "pending damage": {"damage": 0, "turns": 0},
+    "active domain turns": 0
+    }
 
         self.move = None
         self.current_turn = None
@@ -165,8 +187,7 @@ class BattleManager():
                 if self.move["effects"]["damage buff"]["turns"]:
                     damage *= self.move["effects"]["damage buff"]["multiplier"]
 
-
-        if self.move["effects"]["damage debuff"]["turns"]:
+        if self.move.get("effects", {}).get("damage debuff", {}).get("turns", 0):
             damage *= self.move["effects"]["multiplier"]
 
         else:
@@ -227,7 +248,7 @@ class BattleManager():
                 if values["turns"] > 0:
                     values["turns"] -= 1
 
-    def turn_decrementer(self):
+    def turn_decreamenter(self):
 
         self.turn_decrementer(self.player.effects)
         self.turn_decrementer(self.ai.effects)
@@ -235,7 +256,10 @@ class BattleManager():
 
     def apply_effects(self):
 
-        self.turn_decrementer()
+        self.turn_decreamenter()
+
+        if self.move is None:
+            return 
 
         for effect, values in self.move.get("effects", {}).items():
 
@@ -322,17 +346,17 @@ class BattleManager():
         
         return None
 
-    def domain_clash(self, character):
-                
-        if self.current_turn == self.player and self.move["name"] == "domain expansion":
+    def domain_clash(self, character):       
+
+        if self.current_turn == character and self.move["name"] == "domain expansion":
 
             character.effects["active domain turns"] = 3
             character.domain_effects = self.move["effects"]
 
         if self.attacker.effects["active domain turns"] and self.move["name"] == "domain expansion":
-            loser = self.ai if self.player.ce > self.ai.ce else self.player
+            loser = self.ai if self.player.ce >= self.ai.ce else self.player
 
-        return loser
+            return loser
 
     def domain_loser(self, character):
 
@@ -363,11 +387,13 @@ class BattleManager():
 
 
     def turn_executer(self):
-            self.check_awakening()
+            if self.move is None:
+                return
 
             self.apply_effects()
 
-            self.domain_clash()
+            self.domain_clash(self.player)
+            self.domain_clash(self.ai)
 
             damage = self.calculate_damage()   
 
@@ -384,7 +410,7 @@ class BattleManager():
 
     def turn_setter_and_executer(self, player1, player2):
             
-            if not self.player.effects["stun"]:
+            if not player1.effects["stun"]:
 
                 self.player.turn_counter += 1
 
@@ -420,13 +446,13 @@ class BattleManager():
         elif self.current_turn == self.ai:
             self.turn_setter_and_executer(self.ai, self.player)
 
-            if not self.player.effects["turns"]:
+            if not self.ai.effects["stun"]:
                 self.ai_turn_select()
 
 
     def check_awaken(self, character):
         if character.awakened_turns_left == 0:
-            character.is_awakened = False
+            character.is_awaken = False
 
         if character.turn_counter >= 6 and not character.has_awakened:
             character.can_awaken = True
@@ -455,13 +481,13 @@ class BattleManager():
         else:
 
             if self.ai.hp / self.ai.max_hp <= 0.3:
-                self.ai.available_moves[max(self.ai.available_moves, key = lambda m: m["damage"])]["score"] += 3 # so it access the returned move data and access its score and increament 3 to it.
+                max(self.ai.available_moves, key=lambda m: m["damage"])["score"] += 3
             
             if self.ai.ce / self.ai.max_ce <= 0.3:
-                self.ai.available_moves[min(self.ai.available_moves, key = lambda m: m["CE"])]["score"] += 3
+                min(self.ai.available_moves, key=lambda m: m["CE"])["score"] += 3
 
             if self.ai.ce / self.ai.max_ce > 0.3 and self.ai.hp / self.ai.max_hp > 0.3:
-                self.ai.available_moves[max(self.ai.available_moves, key = lambda m: m["damage"])]["score"] += 2
+                max(self.ai.available_moves, key=lambda m: m["damage"])["score"] += 2
 
             if self.ai.ce / self.ai.max_ce >= 0.5:
 
@@ -485,11 +511,28 @@ class BattleManager():
                                     moves["score"] -= 2
             
 
-            if self.awakening >= sorted(self.ai.available_moves, key = lambda m: m["score"], reverse = True)[1]:
+            if self.awakening >= sorted(self.ai.available_moves, key = lambda m: m["score"], reverse = True)[1]["score"]:
 
                 self.is_awakened = True
                 self.has_awakened = True
                 self.awakened_turns_left = 3
 
 
-            self.move = self.ai.available_moves[max(self.ai.available_moves, key = lambda m: m["score"])]
+            self.move = max(self.ai.available_moves, key = lambda m: m["score"])
+
+
+    def get_available_moves(self,character):
+
+        if character.is_awakened:
+
+            for move in self.character.awakened_moves:
+                if self.character.ce >= move["CE"]:
+
+                    character.available_moves.append({**move, "score": 0})
+
+        else:
+
+            for move in character.moves:
+                if character.ce >= move["CE"]:
+
+                    character.available_moves.append({**move, "score": 0})
